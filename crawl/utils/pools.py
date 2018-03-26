@@ -18,4 +18,4 @@ _auth = config.MONGO_AUTH
 if _auth:
     mongo_db.authenticate(**_auth)
 
-redis_connection_pool = redis.ConnectionPool.from_url(config.REDIS_URI)
+redis_connection_pool = redis.ConnectionPool.from_url(config.REDIS_URL)
