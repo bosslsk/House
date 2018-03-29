@@ -31,6 +31,11 @@ class QidianSourceSpider(RedisSpider):
         self.books = books
 
     def make_request_from_data(self, data):
+        """
+        反序列化request_data，构造请求链接
+        :param data:
+        :return:
+        """
         data = pickle.loads(data)
         url = data.pop('data_url', None)
         if url:
@@ -44,20 +49,24 @@ class QidianSourceSpider(RedisSpider):
 
     def parse(self, response):
         """
-        索引列表
+        获取起点索引列表
         :param response:
         :return:
         """
-        data = response.meta['data']
         book_list = response.xpath('//ul[@class="all-img-list cf"]/li')
         for book in book_list:
+            item = MaterialSourceItem()
+            item.update(response.meta['data'])
             url = response.urljoin(book.xpath('./div[2]/h4/a/@href').extract()[0])
             book_id = url.split('/')[-1]
+            item['book_id'] = book_id
             if book_id in self.books:
-                print 'This book is exist'
+                item['relate_id'] = '%s_%s' % (item['source_id'], item['book_id'])
+                yield item
+                continue
             yield Request(
                 url,
-                meta={'data': data},
+                meta={'item': item},
                 callback=self.parse_detail,
                 dont_filter=True
             )
@@ -68,16 +77,12 @@ class QidianSourceSpider(RedisSpider):
         :param response:
         :return:
         """
-        data = response.meta['data']
-        item = MaterialSourceItem()
+        item = response.meta['item']
         xpath_folder_url = '//div[@class="book-information cf"]/div[@class="book-img"]/a/img/@src'
         xpath_title = '//div[@class="book-information cf"]/div[@class="book-info "]/h1/em/text()'
         xpath_author = '//div[@class="book-information cf"]//a[@class="writer"]/text()'
-        xpath_sub_category = '//div[@class="book-information cf"]//a[@class="red"]/text()'
         xpath_introduction = '//div[@class="book-intro"]/p/text()'
         item['url'] = response.url
-        item['source_id'] = 1
-        item['book_id'] = response.url.split('/')[-1]
         item['relate_id'] = '%s_%s' % (item['source_id'], item['book_id'])
         item['folder_url'] = response.urljoin(response.xpath(xpath_folder_url).extract()[0]).strip()
         item['title'] = response.xpath(xpath_title).extract()[0]
@@ -85,9 +90,7 @@ class QidianSourceSpider(RedisSpider):
             item['author'] = response.xpath(xpath_author).extract()[0]
         except IndexError:
             return
-        item['tar_category'] = data['tar_category']
-        item['source_category'] = data['source_category']
-        item['source_category'] = response.xpath(xpath_sub_category).extract()[1]
+        item['gender'] = u'男性向小说'
         introduction = response.xpath(xpath_introduction).extract()
         item['introduction'] = '\n'.join(p.replace(u'　', '').strip() for p in introduction)
         item['created_at'] = today_date()
