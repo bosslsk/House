@@ -25,6 +25,10 @@ CONCURRENT_REQUESTS = 32
 
 # LOG_LEVEL = 'ERROR'
 
+DOWNLOAD_TIMEOUT = 3
+REDIRECT_ENABLED = False
+HTTPERROR_ALLOWED_CODES = [302, 301]
+
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
@@ -34,7 +38,7 @@ DOWNLOAD_DELAY = 1
 # CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-# COOKIES_ENABLED = False
+COOKIES_ENABLED = True
 
 # Disable Telnet Console (enabled by default)
 # TELNETCONSOLE_ENABLED = False
@@ -54,7 +58,8 @@ DOWNLOAD_DELAY = 1
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 # DOWNLOADER_MIDDLEWARES = {
-#    'spider_book.middlewares.MyCustomDownloaderMiddleware': 543,
+#     'spider_book.middlewares.MyCustomDownloaderMiddleware': 543,
+#     'spider_book.middlewares.HttpProxyMiddleware': 543,
 # }
 
 # Enable or disable extensions
@@ -68,13 +73,6 @@ DOWNLOAD_DELAY = 1
 ITEM_PIPELINES = {
     'spider_book.pipelines.SpiderBookPipeline': 300,
 }
-
-# scrapy_redis settings
-# REDIS_ITEMS_KEY = '%(spider)s:items'
-# REDIS_ITEMS_SERIALIZER = 'cPickle.dumps'
-#
-# SCHEDULER = 'scrapy_redis.scheduler.Scheduler'
-# DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 
 # scrapy_redis settings
 REDIS_ITEMS_KEY = '%(spider)s:items'
