@@ -9,14 +9,16 @@ from spider_book.pools import mongo_db
 
 class SpiderBookPipeline(object):
     def process_item(self, item, spider):
-        if spider.name == 'qidian_source':
+        print item
+        if spider.name in ['qidian_source', 'jjwxc_source']:
+            source_category = item.pop('source_category')
             mongo_db['material_source'].update_one(
                 {'_id': item['relate_id']},
-                {'$set': item},
+                {'$set': item, '$addToSet': {'source_category': source_category}},
                 upsert=True
             )
-        if spider.name == 'qidian_content':
-            item['_id'] = '%s_%s' % (item['relate_id'], item['chapter_id'])
+        if spider.name in ['qidian_content', 'jjwxc_content']:
+            item['_id'] = '%s_%s' % (item['relate_id'], item['ordinal'])
             mongo_db['material_content'].update_one(
                 {'_id': item['_id']},
                 {'$set': item},
