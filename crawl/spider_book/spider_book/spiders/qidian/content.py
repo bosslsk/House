@@ -12,6 +12,7 @@ from scrapy.conf import settings
 from scrapy import Request
 from scrapy_redis.spiders import RedisSpider
 
+from crawl.utils.binary import str2binary
 from crawl.utils.text import text_format
 from crawl.utils.date import today_date
 from spider_book.items import MaterialContentItem
@@ -22,8 +23,12 @@ class QidianContentSpider(RedisSpider):
     redis_key = 'qidian:content'
 
     def make_request_from_data(self, data):
+        """
+        反序列化requests_data,调笔趣阁搜索接口
+        :param data:
+        :return:
+        """
         data = pickle.loads(data)
-        print type(data)
         title = data.pop('title', None)
         biquge_url = u'http://www.biquge5200.com/modules/article/search.php?searchkey={searchkey}'
         if title:
@@ -36,31 +41,29 @@ class QidianContentSpider(RedisSpider):
             return req
 
     def parse(self, response):
-        """
-        笔趣阁搜索结果
+        """笔趣阁搜索结果
         :param response:
         :return:
         """
-        # TODO: 如果请求连接失败，允许请求几次，或跳转到哪个爬虫
-        item = MaterialContentItem()
-        item = item.update(response.meta['data'])
+        data = response.meta['data']
         elements = response.xpath('//div[@id="hotcontent"]//tr')[1:]
         for element in elements:
             result_title = element.xpath('./td[@class="odd"]/a/text()').extract()[0]
             result_author = element.xpath('./td[@class="odd"]/text()').extract()[0]
-            if result_title == item['title'] and result_author == item['author']:
+            if result_title == data['title'] and result_author == data['author']:
                 result_url = element.xpath('./td[@class="odd"]/a/@href').extract()[0]
                 yield Request(
                     url=result_url,
                     callback=self.parse_biquge_chapter,
-                    meta={'item': item},
+                    meta={'data': data},
                     dont_filter=True
                 )
                 return
         yield Request(
-            url=item['url'],
-            meta={'item': item},
-            callback=self.parse_qidian
+            url=data['url'],
+            meta={'data': data},
+            callback=self.parse_qidian,
+            dont_filter=True
         )
 
     def parse_biquge_chapter(self, response):
@@ -69,11 +72,12 @@ class QidianContentSpider(RedisSpider):
         :return:
         """
         if '不存在的网页' in response.body:
-            item = response.meta['item']
+            item = response.meta['data']
             yield Request(
                 url=item['url'],
                 meta={'item': item},
-                callback=self.parse_qidian
+                callback=self.parse_qidian,
+                dont_filter=True
             )
         chapters = response.xpath('//div[@id="list"]/dl/dd')[9:]
         chapter_id = 1
@@ -81,13 +85,13 @@ class QidianContentSpider(RedisSpider):
             item = MaterialContentItem()
             item.update(response.meta['item'])
             item['chapter_name'] = chapter.xpath('./a/text()').extract()[0]
-            item['chapter_id'] = '%s_%s' % (item['relate_id'], chapter_id)
-            download_url = chapter.xpath('./a/@href').extract()[0]
+            item['ordinal'] = chapter_id
+            chapter_url = chapter.xpath('./a/@href').extract()[0]
             item['created_at'] = today_date()
             item['updated_at'] = today_date()
             chapter_id += 1
             yield Request(
-                url=download_url,
+                url=chapter_url,
                 callback=self.parse_biquge_content,
                 meta={'item': item},
                 dont_filter=True
@@ -99,8 +103,8 @@ class QidianContentSpider(RedisSpider):
         :return:
         """
         item = response.meta['item']
-        item['download_url'] = response.url
-        item['content'] = text_format(response.xpath('//div[@id="content"]/text()').extract())
+        item['chapter_url'] = response.url
+        item['content'] = str2binary(text_format(response.xpath('//div[@id="content"]/text()').extract()))
         item['finished'] = 1
         yield item
 
@@ -109,14 +113,14 @@ class QidianContentSpider(RedisSpider):
         :param response:
         :return:
         """
-        item = response.meta['item']
+        data = response.meta['data']
         volume_list = response.xpath(u'//div[@class="volume" and not(contains(.,"作品相关"))]')
         if not volume_list:
             self.logger.debug('has 0 volume, now get qidian dynamic chapter list.')
             yield Request(
-                'http://book.qidian.com/ajax/book/category?bookId=%s&_csrfToken=' % item['book_id'],
+                'http://book.qidian.com/ajax/book/category?bookId=%s&_csrfToken=' % data['book_id'],
                 callback=self.parse_qidian_dynamic,
-                meta={'item': item},
+                meta={'data': data},
                 dont_filter=True
             )
         else:
@@ -134,12 +138,11 @@ class QidianContentSpider(RedisSpider):
                         if any(chapter_name.startswith(w) for w in settings.get('USELESS_CHAPTER')):
                             continue
                         item = MaterialContentItem()
-                        item.update(response.meta['item'])
+                        item.update(response.meta['data'])
                         item['chapter_name'] = chapter_name
-                        item['chapter_id'] = chapter_id
+                        item['ordinal'] = chapter_id
                         chapter_id += 1
                         chapter_url = response.urljoin(chapter.xpath('./a/@href').extract()[0])
-                        item['download_url'] = chapter_url
                         yield Request(
                             chapter_url,
                             meta={'item': item},
@@ -166,14 +169,13 @@ class QidianContentSpider(RedisSpider):
                 if any(chapter_name.startswith(w) for w in settings.get('USELESS_CHAPTER')):
                     continue
                 item = MaterialContentItem()
-                item.update(response.meta['item'])
+                item.update(response.meta['data'])
                 item['title'] = chapter_name
-                item['chapter_id'] = chapter_id
+                item['ordinal'] = chapter_id
                 chapter_id += 1
                 chapter_url = 'http://read.qidian.com/chapter/%s' % chapter['cU']
-                item['download_url'] = chapter_url
                 yield Request(
-                    chapter_url,
+                    url=chapter_url,
                     meta={'item': item},
                     callback=self.parse_qidian_content,
                     dont_filter=True
@@ -186,8 +188,9 @@ class QidianContentSpider(RedisSpider):
         :return:
         """
         item = response.meta['item']
+        item['chapter_url'] = response.url
         item['created_at'] = today_date()
         item['updated_at'] = today_date()
-        item['content'] = text_format(response.xpath('//div[@class="read-content j_readContent"]/p/text()').extract())
-        item['finished'] = 1
+        item['content'] = str2binary(text_format(response.xpath('//div[@class="read-content j_readContent"]/p/text()').extract()))
+        item['status'] = 1
         yield item
