@@ -30,7 +30,7 @@ def collect_data(spider_name, mongodb, limit=0):
     """
     source_id, data_coll = generate_id_coll(spider_name)
     param = {
-        '_id': 0, 'source_id': 1, 'book_id': 1, 'tar_category': 1, 'sub_category': 1,
+        '_id': 0, 'source_id': 1, 'book_id': 1, 'tar_category': 1, 'source_category': 1,
         'title': 1, 'url': 1, 'relate_id': 1, 'author': 1
     }
     if 'source' in data_coll:
@@ -71,7 +71,6 @@ def source_data(source_id, start_url_info):
                     'source_id': source_id,
                     'tar_category': tar_category,
                     'source_category': source_category
-
                 }
                 data.append(data_info)
     return data
