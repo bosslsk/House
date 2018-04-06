@@ -40,6 +40,7 @@ class MaterialContentItem(BaseItem):
     ordinal = scrapy.Field()  # int
     chapter_name = scrapy.Field()
     chapter_url = scrapy.Field()
+    text_url = scrapy.Field()
     status = scrapy.Field()    # 是否成功下载   1 成功   0  失败
     content = scrapy.Field()
     created_at = scrapy.Field()  # 创建时间

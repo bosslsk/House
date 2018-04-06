@@ -51,9 +51,7 @@ class QidianContentSpider(RedisSpider):
         if elements:
             for element in elements:
                 result_title = element.xpath('./td[@class="odd"]/a/text()').extract()[0]
-                print result_title
                 result_author = element.xpath('./td[@class="odd"]/text()').extract()[0]
-                print result_author
                 if result_title == data['title'] and result_author == data['author']:
                     result_url = element.xpath('./td[@class="odd"]/a/@href').extract()[0]
                     yield Request(
