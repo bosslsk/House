@@ -11,7 +11,7 @@ from hm_collections.queue.redis_queue import RedisSetQueue
 
 from crawl.settings import config
 from crawl.utils.pools import redis_connection_pool
-from crawl.run.prepare_data import generate_data as generate_platform_data
+from crawl.run.prepare_data import collect_data
 
 r = redis.StrictRedis(connection_pool=redis_connection_pool)
 
@@ -31,5 +31,5 @@ def add_data(data, spider_name):
 
 def generate_data(spider_name, mongo_db, limit=5):
     if spider_name in config.PLATFORM_DATA_SPIDERS:
-        data = generate_platform_data(spider_name, mongo_db, limit)
+        data = collect_data(spider_name, mongo_db, limit)
         return data
