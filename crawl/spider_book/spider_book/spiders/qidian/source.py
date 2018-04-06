@@ -7,7 +7,7 @@
 
 import cPickle as pickle
 
-from crawl.utils.date import today_date
+from crawl.utils.date import today_date, now_date
 from scrapy import Request
 from scrapy_redis.spiders import RedisSpider
 from spider_book.items import MaterialSourceItem
@@ -27,7 +27,7 @@ class QidianSourceSpider(RedisSpider):
         获取起点所有book_id列表，如果抓取新书在此列表中，则不进行重复抓取
         :return:
         """
-        books = set(i['book_id'] for i in mongo_db['material_source'].find({'source_id': 1}, {'book_id': 1}))
+        books = set(i['book_id'] for i in mongo_db['material_index'].find({'source_id': 1}, {'book_id': 1}))
         self.books = books
 
     def make_request_from_data(self, data):
@@ -93,6 +93,6 @@ class QidianSourceSpider(RedisSpider):
         item['gender'] = u'男性向小说'
         introduction = response.xpath(xpath_introduction).extract()
         item['introduction'] = '\n'.join(p.replace(u'　', '').strip() for p in introduction)
-        item['created_at'] = today_date()
+        item['created_at'] = now_date()
         item['updated_at'] = today_date()
         yield item
