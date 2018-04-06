@@ -23,12 +23,11 @@ class MaterialSourceItem(BaseItem):
     gender = scrapy.Field()
     tar_category = scrapy.Field()   # 目标分类
     source_category = scrapy.Field()    # 站点分类
-    book_status = scrapy.Field()    # 书连载状态  1为完结  0为连载
     introduction = scrapy.Field()
     created_at = scrapy.Field()  # 创建时间
     updated_at = scrapy.Field()  # 更新时间
-    chan_id = scrapy.Field()  # 讨论id
     relate_id = scrapy.Field()
+    sort = scrapy.Field()       # 按照列表顺序排序，抓取前20本书
 
 
 class MaterialContentItem(BaseItem):
