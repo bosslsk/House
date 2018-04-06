@@ -11,3 +11,8 @@ from datetime import datetime
 def today_date():
     now = datetime.now()
     return datetime(now.year, now.month, now.day)
+
+
+def now_date():
+    now = datetime.now()
+    return datetime(now.year, now.month, now.day, now.hour, now.minute, now.second)
