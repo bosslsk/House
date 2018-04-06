@@ -7,8 +7,8 @@
 
 
 class Config(object):
-    COLL_MATERIAL_SOURCE = 'material_source'
-    COLL_MATERIAL_CONTENT = 'material_content'
+    COLL_MATERIAL_SOURCE = 'material_index'
+    COLL_MATERIAL_CONTENT = 'material_chapter'
 
     SOURCE_DICT = {
         'qidian': 1,
@@ -16,8 +16,8 @@ class Config(object):
     }
 
     MATERIAL_DICT = {
-        'source': 'material_source',
-        'content': 'material_content'
+        'source': 'material_index',
+        'content': 'material_chapter'
     }
 
     PLATFORMS = ['qidian', 'jjwxc']
