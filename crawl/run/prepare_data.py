@@ -30,14 +30,13 @@ def collect_data(spider_name, mongodb, limit=0):
     """
     source_id, data_coll = generate_id_coll(spider_name)
     param = {
-        '_id': 0, 'source_id': 1, 'book_id': 1, 'tar_category': 1, 'source_category': 1,
-        'title': 1, 'url': 1, 'relate_id': 1, 'author': 1
+        '_id': 0, 'source_id': 1, 'book_id': 1, 'relate_id': 1, 'title': 1, 'url': 1, 'author': 1
     }
-    if 'source' in data_coll:
+    if 'index' in data_coll:
         start_url_info = config.SOURCE_START_URL_DICT[spider_name.split('_')[0]]
         data = source_data(source_id, start_url_info)
     else:
-        data = list(mongodb['material_source'].find({'source_id': source_id}, param).limit(limit))
+        data = list(mongodb['material_index'].find({'source_id': source_id}, param).limit(limit))
     return data
 
 
