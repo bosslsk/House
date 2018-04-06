@@ -12,7 +12,7 @@ from HTMLParser import HTMLParser
 from scrapy import Request, FormRequest
 from scrapy_redis.spiders import RedisSpider
 
-from crawl.utils.date import today_date
+from crawl.utils.date import today_date, now_date
 from spider_book.items import MaterialSourceItem
 from spider_book.pools import mongo_db
 
@@ -26,7 +26,7 @@ class JjwxcSourceSpider(RedisSpider):
         self.get_books()
 
     def get_books(self):
-        books = set(i['book_id'] for i in list(mongo_db['material_source'].find({'source_id': 7}, {'book_id': 1})))
+        books = set(i['book_id'] for i in list(mongo_db['material_index'].find({'source_id': 7}, {'book_id': 1})))
         self.books = books
 
     def make_request_from_data(self, data):
@@ -43,6 +43,7 @@ class JjwxcSourceSpider(RedisSpider):
 
     def parse(self, response):
         book_list = response.xpath('//table[@class="cytable"]/tbody/tr')[1:]
+        sort = 1
         for book in book_list:
             item = MaterialSourceItem()
             item.update(response.meta['data'])
@@ -53,6 +54,8 @@ class JjwxcSourceSpider(RedisSpider):
                 item['relate_id'] = '%s_%s' % (item['source_id'], item['book_id'])
                 yield item
                 continue
+            item['sort'] = sort
+            sort += 1
             book_url = 'http://app.jjwxc.org/androidapi/novelbasicinfo?novelId={}'.format(book_id)
             yield FormRequest(
                 book_url,
@@ -86,6 +89,6 @@ class JjwxcSourceSpider(RedisSpider):
         item['gender'] = u'女性向小说'
         introduction = HTMLParser().unescape(detail_json['novelIntro'])
         item['introduction'] = '\n'.join(p.strip() for p in introduction.split('<br/>') if p != '')
-        item['created_at'] = today_date()
+        item['created_at'] = now_date()
         item['updated_at'] = today_date()
         yield item
