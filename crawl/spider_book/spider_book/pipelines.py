@@ -12,14 +12,17 @@ class SpiderBookPipeline(object):
         print item
         if spider.name in ['qidian_source', 'jjwxc_source']:
             source_category = item.pop('source_category')
-            mongo_db['material_source'].update_one(
+            mongo_db['material_index'].update_one(
                 {'_id': item['relate_id']},
                 {'$set': item, '$addToSet': {'source_category': source_category}},
                 upsert=True
             )
         if spider.name in ['qidian_content', 'jjwxc_content']:
+            item.pop('author', None)
+            item.pop('url', None)
             item['_id'] = '%s_%s' % (item['relate_id'], item['ordinal'])
-            mongo_db['material_content'].update_one(
+            item['text_url'] = '%s/%s' % (item['book_id'], item['ordinal'])
+            mongo_db['material_chapter'].update_one(
                 {'_id': item['_id']},
                 {'$set': item},
                 upsert=True
