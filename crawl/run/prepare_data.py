@@ -35,7 +35,7 @@ def collect_data(spider_name, mongodb, limit=0):
     if 'index' in data_coll:
         start_url_info = config.SOURCE_START_URL_DICT[spider_name.split('_')[0]]
         data = source_data(source_id, start_url_info)
-    elif data_coll == 'jjwxc_chapter':
+    elif data_coll == 'jjwxc_content':
         category_list = list(mongodb['material_index'].aggregate(
             [
                 {'$match': {'source_id': 7}},
@@ -46,7 +46,7 @@ def collect_data(spider_name, mongodb, limit=0):
         ))
         data = []
         for source_category in category_list:
-            data.append(mongodb['material_index'].find({'source_id': 7, 'source_category': source_category}, {'title': 1}).sort({'sort': 1}).limit(20))
+            data.extend(list(mongodb['material_index'].find({'source_id': 7, 'source_category': source_category['_id']}, param).sort([('sort', 1)]).limit(20)))
     else:
         data = list(mongodb['material_index'].find({'source_id': source_id}, param).limit(limit))
     return data
