@@ -75,9 +75,9 @@ class JjwxcContentSpider(RedisSpider):
             item = MaterialContentItem()
             item.update(response.meta['item'])
             try:
-                item['chapter_name'] = chapter.xpath('./a/text()').extract()[0]
+                item['title'] = chapter.xpath('./a/text()').extract()[0]
             except IndexError:
-                item['chapter_name'] = chapter.xpath('.//b/text()').extract()[0]
+                item['title'] = chapter.xpath('.//b/text()').extract()[0]
             item['ordinal'] = chapter_id
             chapter_id += 1
             item['created_at'] = today_date()
