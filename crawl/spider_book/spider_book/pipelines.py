@@ -9,7 +9,6 @@ from spider_book.pools import mongo_db
 
 class SpiderBookPipeline(object):
     def process_item(self, item, spider):
-        print item
         if spider.name in ['qidian_source', 'jjwxc_source']:
             source_category = item.pop('source_category')
             mongo_db['material_index'].update_one(
