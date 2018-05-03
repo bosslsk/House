@@ -25,9 +25,9 @@ CONCURRENT_REQUESTS = 32
 
 # LOG_LEVEL = 'ERROR'
 
-# DOWNLOAD_TIMEOUT = 3
-# REDIRECT_ENABLED = False
-# HTTPERROR_ALLOWED_CODES = [302, 301]
+DOWNLOAD_TIMEOUT = 3
+REDIRECT_ENABLED = False
+HTTPERROR_ALLOWED_CODES = [302, 301]
 
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
